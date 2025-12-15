@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Downloader</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #1e1e1e; padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; }
+        input { width: 90%; padding: 12px; margin: 15px 0; border: 1px solid #333; border-radius: 6px; background: #2c2c2c; color: #fff; }
+        button   { background: #00f2ea; color: #000; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        button:hover { background: #ff0050; color: #fff; }
+        #result { margin-top: 20px; display: none; border-top: 1px solid #333; padding-top: 20px; }
+        img { width: 100%; border-radius: 8px; margin-bottom: 15px; }
+        .btn-download { display: block; background: #25D366; color: white; padding: 10px; text-decoration: none; border-radius: 6px; margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🚀 Tiktok Video Downloader</h2>
+        <input type="text" id="urlInput" placeholder="Paste Link TikTok...">
+        <button onclick="process()">Download HD</button>
+        <p id="loading" style="display:none; color: #888;">Sedang memproses...</p>
+
+        <div id="result">
+            <h4 id="vTitle"></h4>
+            <img id="vThumb" src="">
+            <a id="vLink" href="#" target="_blank" class="btn-download">Download Video (No WM)</a>
+        </div>
+    </div>
+
+    <script>
+       async function process() {
+        const urlInput = document.getElementById('urlInput').value;
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        
+        if(!urlInput) return alert("Masukkan URL!");
+
+        loading.style.display = 'block';
+        loading.innerText = "Sedang menganalisis..."; // Text loading 1
+        result.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({url: urlInput})
+            });
+            const data = await res.json();
+
+            if(data.status === 'success') {
+                document.getElementById('vTitle').innerText = data.title;
+                document.getElementById('vThumb').src = data.thumbnail;
+                
+                const downloadBtn = document.getElementById('vLink');
+                
+                // --- LOGIKA BARU ---
+                // Saat tombol diklik, ubah text jadi 'Processing...'
+                downloadBtn.onclick = function() {
+                    downloadBtn.innerText = "⏳ Sedang mendownload ke server... Tunggu ya!";
+                    downloadBtn.style.background = "#ccc";
+                    // Kita biarkan href bekerja normal (pindah ke link download)
+                };
+
+                downloadBtn.href = `/api/download?url=${encodeURIComponent(urlInput)}`;
+                downloadBtn.innerText = "Download Video (No WM)";
+                downloadBtn.style.background = "#25D366";
+                // -------------------
+
+                result.style.display = 'block';
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Server Error');
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>
